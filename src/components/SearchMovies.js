@@ -1,51 +1,63 @@
-import React from 'react';
-
-import noPoster from '../assets/images/no-poster.jpg';
+import React, { useEffect, useState } from 'react';
+import noPoster from '../assets/images/404.jpg';
 
 function SearchMovies(){
+	
+	const [keywords, setKeywords] = useState('');
+	const apiKey = '3c5845eb'; // Intenta poner cualquier cosa antes para probar
+	const [movies, setMovies] = useState({
+		error: false,
+		data: []
+	});
+	const inputRef = React.useRef(null)
 
-	const movies = [
-		{
-			"Title": "Parchís",
-			"Year": "1983",
-			"Poster": "https://m.media-amazon.com/images/M/MV5BYTgxNjg2MTAtYjhmYS00NjQwLTk1YTMtNmZmOTMyNTAwZWUwXkEyXkFqcGdeQXVyMTY5MDE5NA@@._V1_SX300.jpg"
-		},
-		{
-			"Title": "Brigada en acción",
-			"Year": "1977",
-			"Poster": "N/A"
-		},
-	];
-
-	const keyword = 'PELÍCULA DEMO';
-
+	
 	// Credenciales de API
-	const apiKey = 'X'; // Intenta poner cualquier cosa antes para probar
+	
+	useEffect(() => {
+		fetch(`http://www.omdbapi.com/?s=${keywords}&apikey=${apiKey}`)
+		.then(res => res.json())
+		.then(response => {
+			setMovies({
+				error: response.Error ? response.Error : false ,
+				data: response.Search,
+			})
+		});
+		
+	}, [keywords])
+	
+	function searchMovie() {
+		document.getElementById("searchForm").addEventListener("submit", e =>{
+			e.preventDefault()
+		})
+
+		setKeywords(inputRef.current.value)
+	}
 
 	return(
 		<div className="container-fluid">
 			{
 				apiKey !== '' ?
 				<>
-					<div className="row my-4">
-						<div className="col-12 col-md-6">
+					<div className="row my-4 d-flex align-items-center justify-content-center">
+						<div className="col-12 col-md-6 ">
 							{/* Buscador */}
-							<form method="GET">
+							<form method="GET" id='searchForm'>
 								<div className="form-group">
 									<label htmlFor="">Buscar por título:</label>
-									<input type="text" className="form-control" />
+									<input type="text" className="form-control" ref={inputRef}/>
 								</div>
-								<button className="btn btn-info">Search</button>
+								<button className="btn btn-info" onClick={searchMovie}>Search</button>
 							</form>
 						</div>
 					</div>
 					<div className="row">
 						<div className="col-12">
-							<h2>Películas para la palabra: {keyword}</h2>
+							<h2>Películas para la palabra: {keywords}</h2>
 						</div>
 						{/* Listado de películas */}
 						{
-							movies.length > 0 && movies.map((movie, i) => {
+							!movies.error && movies.data.length > 0 && movies.data.map((movie, i) => {
 								return (
 									<div className="col-sm-6 col-md-3 my-4" key={i}>
 										<div className="card shadow mb-4">
@@ -55,8 +67,8 @@ function SearchMovies(){
 											<div className="card-body">
 												<div className="text-center">
 													<img 
-														className="img-fluid px-3 px-sm-4 mt-3 mb-4" 
-														src={movie.Poster}
+														className="img-fluid px-3 px-sm-4 mt-4 mb-4" 
+														src={movie.Poster ? (movie.Poster !== "N/A" ? movie.Poster : noPoster) : noPoster}
 														alt={movie.Title} 
 														style={{ width: '90%', height: '400px', objectFit: 'cover' }} 
 													/>
@@ -72,7 +84,7 @@ function SearchMovies(){
 					{ movies.length === 0 && <div className="alert alert-warning text-center">No se encontraron películas</div>}
 				</>
 				:
-				<div className="alert alert-danger text-center my-4 fs-2">Eyyyy... ¿PUSISTE TU APIKEY?</div>
+				<div className="alert alert-danger text-center my-4 fs-2">ApiKey incorrecta</div>
 			}
 		</div>
 	)
